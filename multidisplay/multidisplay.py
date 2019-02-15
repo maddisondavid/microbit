@@ -92,7 +92,6 @@ def distribute_screen_buffers():
                 for col in range(screen*5, (screen*5)+5):
                     screen_data += str(animation_buffer[row][col])
 
-            print("SB "+str(screen)+screen_data)
             radio.send(str(screen)+screen_data)
 
 
