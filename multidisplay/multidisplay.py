@@ -19,11 +19,9 @@ localBuffer = [[0] * 5 for i in range(5)]
 ballX = 2
 ballDirection = -1
 
-is_master = False
-number_of_screens = 2
+number_of_screens = 3
 
 max_cols = 5*number_of_screens
-
 
 def initialize():
     global is_master, screen_number
@@ -31,8 +29,11 @@ def initialize():
     # wait here to be assigned a role
     display.show("--")
     while screen_number == -1:
+        if button_b.is_pressed() and button_a.is_pressed():
+            screen_number = 2
+            break
+
         if button_a.is_pressed():
-            is_master = True
             screen_number = 0
 
         if button_b.is_pressed():
@@ -56,6 +57,7 @@ def create_animation_buffer():
 
 
 def animate():
+    """Perform animation into the animation buffer"""
     global ballX, ballDirection
 
     if ballX == 0:
@@ -69,6 +71,7 @@ def animate():
 
 
 def reset_buffer():
+    """Clear the whole animation buffer"""
     for row in range (0, 5):
         for col in range(0, len(animation_buffer[row])):
             animation_buffer[row][col] = 0
@@ -89,16 +92,8 @@ def distribute_screen_buffers():
                 for col in range(screen*5, (screen*5)+5):
                     screen_data += str(animation_buffer[row][col])
 
+            print("SB "+str(screen)+screen_data)
             radio.send(str(screen)+screen_data)
-
-
-def load_local_buffer(buffer_data):
-    """Load"""
-    for row in range(0, 5):
-        for col in range(0, 5):
-            row_start = 5 * row
-
-            localBuffer[row][col] = int(buffer_data[row_start+col:row_start+col+1])
 
 
 def trigger_render():
@@ -115,9 +110,9 @@ def renderLocal():
 
 def wait_for_buffer_data():
     """Wait for frame buffer data to be sent by master"""
-    buffer_data = None
     data_loaded = False
     while not data_loaded:
+        buffer_data = None
         while buffer_data is None:
             buffer_data = radio.receive()
 
@@ -126,6 +121,15 @@ def wait_for_buffer_data():
         if buffer_data_str.startswith(str(screen_number)):
             load_local_buffer(buffer_data_str[1:])
             data_loaded = True
+
+
+def load_local_buffer(buffer_data):
+    """Load received buffer data into our local buffer"""
+    for row in range(0, 5):
+        for col in range(0, 5):
+            row_start = 5 * row
+
+            localBuffer[row][col] = int(buffer_data[row_start+col:row_start+col+1])
 
 
 def wait_for_render():
