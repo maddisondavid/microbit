@@ -16,12 +16,20 @@ screen_number = -1
 animation_buffer = []
 localBuffer = [[0] * 5 for i in range(5)]
 
-ballX = 2
+spriteX = 2
+spriteY = 1
+sprite_reversed = False
 ballDirection = -1
 
 number_of_screens = 3
 
 max_cols = 5*number_of_screens
+
+sprite_width = 4
+sprite_height = 3
+sprite = [[3,5,9,0],
+          [5,7,9,9],
+          [3,5,9,0]]
 
 def initialize():
     global is_master, screen_number
@@ -58,16 +66,16 @@ def create_animation_buffer():
 
 def animate():
     """Perform animation into the animation buffer"""
-    global ballX, ballDirection
+    global spriteX, spriteY, sprite_width, sprite_height, sprite_reversed, ballDirection
 
-    if ballX == 0:
-        ballDirection = 1
+    spriteX += 1
 
-    if ballX == max_cols-1:
-        ballDirection = -1
+    if spriteX > max_cols-sprite_width:
+        spriteX = 0
 
-    ballX += ballDirection
-    animation_buffer[2][ballX] = 9
+    for row in range(0,sprite_height):
+        for col in range(0,sprite_width):
+            animation_buffer[row + spriteY][col+spriteX] = sprite[row][col]
 
 
 def reset_buffer():
