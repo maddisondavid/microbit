@@ -11,6 +11,8 @@ import radio
 #
 
 RENDER_MSG = "RENDER"
+NEED_NUMBER_MSG = "NEEDSCREEN"
+ASSIGN_NUMBER_MSG = "ASSIGN"
 
 screen_number = -1
 animation_buffer = []
@@ -34,18 +36,42 @@ sprite = [[3,5,9,0],
 def initialize():
     global is_master, screen_number
 
+    pin0.write_digital(0)
+    pin1.write_digital(0)
+
+    radio.config(group=1)
+    radio.on()
+
     # wait here to be assigned a role
     display.show("--")
-    while screen_number == -1:
-        if button_b.is_pressed() and button_a.is_pressed():
-            screen_number = 2
-            break
-
+    while True:
         if button_a.is_pressed():
             screen_number = 0
 
-        if button_b.is_pressed():
-            screen_number = 1
+            master_setup()
+            break
+
+        if pin0.read_digital() == 1:
+            # Clear radio buffer since other comms traffic will been received
+            while radio.receive() is not None:
+                None
+
+            radio.send(NEED_NUMBER_MSG)
+
+            # Wait here for response
+            number_assign = None
+            while number_assign is None:
+                number_assign = radio.receive()
+
+            # Extract screen number
+            print("MSG="+number_assign)
+            screen_number = int(number_assign[len(ASSIGN_NUMBER_MSG):])
+            display.show(screen_number)
+
+            # Trigger next Node
+            pin1.write_digital(1)
+
+            break
 
         sleep(100)
 
@@ -53,10 +79,34 @@ def initialize():
     sleep(500)
 
     display.clear()
-    radio.config(group=1)
-    radio.on()
 
+def master_setup():
+    global number_of_screens
 
+    display.show("0")
+
+    # Trigger chain reaction
+    pin1.write_digital(1)
+
+    next_screen = 1
+
+    print("Master Setup Start")
+    all_assigned = False
+    while not all_assigned:
+        screen_setup_msg = radio.receive()
+
+        if screen_setup_msg is not None:
+            if screen_setup_msg == NEED_NUMBER_MSG:
+                radio.send(ASSIGN_NUMBER_MSG + str(next_screen))
+                next_screen += 1
+
+        # We're finished if it loops around
+        all_assigned = pin0.read_digital() == 1
+
+        sleep(100)
+
+    number_of_screens = next_screen
+    print("Master Setup Finished")
 
 def create_animation_buffer():
     global number_of_screens, animation_buffer
@@ -154,6 +204,7 @@ def wait_for_render():
 
 initialize()
 create_animation_buffer()
+print("Start Main Loop")
 while True:
     if screen_number == 0:
         reset_buffer()
