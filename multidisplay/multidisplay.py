@@ -120,13 +120,26 @@ def animate():
     """Perform animation into the animation buffer"""
     global spriteX, spriteY, sprite_width, sprite_height, sprite_reversed, ballDirection
 
+    # Move Sprite Along
     spriteX += 1
 
-    if spriteX > max_cols-sprite_width:
-        spriteX = 0
+    if spriteX > max_cols:
+        spriteX = 0 - sprite_width
 
+    start_col = 0
+    end_col = sprite_width
+
+    # If the sprite is before the start of the animation buffer only render the bit showing
+    if spriteX < 0:
+        start_col = spriteX * -1
+
+    # If the sprite is at the end of the animation buffer, render just the part showing
+    if spriteX + sprite_width > max_cols:
+        end_col = max_cols - spriteX
+
+    # Render sprite into animation buffer
     for row in range(0,sprite_height):
-        for col in range(0,sprite_width):
+        for col in range(start_col, end_col):
             animation_buffer[row + spriteY][col+spriteX] = sprite[row][col]
 
 
