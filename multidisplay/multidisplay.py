@@ -25,7 +25,7 @@ ballDirection = -1
 
 number_of_screens = 3
 
-max_cols = 5*number_of_screens
+max_cols = 5
 
 sprite_width = 4
 sprite_height = 3
@@ -108,9 +108,11 @@ def master_setup():
     number_of_screens = next_screen
     print("Master Setup Finished")
 
-def create_animation_buffer():
-    global number_of_screens, animation_buffer
 
+def create_animation_buffer():
+    global number_of_screens, animation_buffer, max_cols
+
+    max_cols = 5 * number_of_screens
     animation_buffer = [[0] * max_cols for i in range(5)]
 
 
